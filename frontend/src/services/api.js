@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+// updated base URL for production deployment
+const API_BASE_URL = 'https://smart-file-organizer-orhn.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
