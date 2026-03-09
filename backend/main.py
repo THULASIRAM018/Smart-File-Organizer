@@ -15,7 +15,8 @@ app = FastAPI(title="Smart File Organizer System")
 
 # ✅ CORS configuration (must be before routers)
 origins = [
-    "https://smart-file-organizer-hiyizpw9g-thulasiram018s-projects.vercel.app",  # Vercel frontend
+    "https://smart-file-organizer-flax.vercel.app",  # Current Vercel frontend
+    "https://smart-file-organizer-hiyizpw9g-thulasiram018s-projects.vercel.app",  # Old Vercel frontend
     "http://localhost:5173",  # Local dev frontend
 ]
 
@@ -28,7 +29,8 @@ app.add_middleware(
 )
 
 # ✅ Include routers after middleware
-app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+# No need to repeat prefix here since it's already in auth_routes.py
+app.include_router(auth_router)
 app.include_router(file_router, prefix="", tags=["File Operations"])
 
 # ✅ Startup event: start watchdog monitoring

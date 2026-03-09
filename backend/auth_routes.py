@@ -2,20 +2,25 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from models import EmailRequest, OTPVerifyRequest
 from otp_service import generate_otp, send_otp_email, store_otp, verify_otp
 
+# Create router (prefix and tags handled in main.py)
 router = APIRouter()
 
-@router.post("/send-otp")
+@router.post("/send-otp", tags=["Authentication"])
 async def send_otp(request: EmailRequest, background_tasks: BackgroundTasks):
-    """Generate OTP, store it, and send via email."""
+    """
+    Generate OTP, store it, and send via email.
+    """
     email = request.email
     otp = generate_otp()
     store_otp(email, otp)
     send_otp_email(background_tasks, email, otp)
     return {"message": "OTP sent successfully"}
 
-@router.post("/verify-otp")
+@router.post("/verify-otp", tags=["Authentication"])
 async def verify_otp_endpoint(request: OTPVerifyRequest):
-    """Verify OTP and return session token if correct."""
+    """
+    Verify OTP and return session token if correct.
+    """
     email = request.email
     otp = request.otp
     token = verify_otp(email, otp)
