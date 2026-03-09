@@ -13,10 +13,10 @@ def send_otp_email(background_tasks: BackgroundTasks, email: str, otp: str):
 
 def _send_email(to_email: str, otp: str):
     """Actual SMTP send function (runs in background)."""
-    smtp_host = os.getenv("EMAIL_HOST")
-    smtp_port = int(os.getenv("EMAIL_PORT", 587))
-    smtp_user = os.getenv("EMAIL_USERNAME")
-    smtp_pass = os.getenv("EMAIL_PASSWORD")
+    smtp_host = os.getenv("EMAIL_HOST", "smtp.gmail.com")   # default Gmail
+    smtp_port = int(os.getenv("EMAIL_PORT", 587))           # default TLS port
+    smtp_user = os.getenv("EMAIL_USER")                     # your email address
+    smtp_pass = os.getenv("EMAIL_PASSWORD")                 # app password
     from_email = os.getenv("EMAIL_FROM", smtp_user)
 
     subject = "Your OTP for Smart File Organizer"
@@ -29,15 +29,13 @@ def _send_email(to_email: str, otp: str):
     msg.attach(MIMEText(body, "plain"))
 
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port)
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-        server.send_message(msg)
-        server.quit()
-        print(f"OTP email sent to {to_email}")
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        print(f"✅ OTP email sent to {to_email}")
     except Exception as e:
-        # In production, log the error
-        print(f"Failed to send email: {e}")
+        print(f"❌ Failed to send email: {e}")
 
 def store_otp(email: str, otp: str):
     """Store OTP and expiry in the database (10 minutes validity)."""
