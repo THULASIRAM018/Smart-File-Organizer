@@ -29,8 +29,8 @@ app.add_middleware(
 )
 
 # ✅ Include routers after middleware
-# No need to repeat prefix here since it's already in auth_routes.py
-app.include_router(auth_router)
+# Prefix is applied here so final paths are /auth/send-otp and /auth/verify-otp
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(file_router, prefix="", tags=["File Operations"])
 
 # ✅ Startup event: start watchdog monitoring
