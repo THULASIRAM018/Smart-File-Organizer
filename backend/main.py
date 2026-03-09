@@ -7,27 +7,31 @@ from auth_routes import router as auth_router
 from file_routes import router as file_router
 from watchdog_monitor import start_monitoring, stop_monitoring
 
+# Load environment variables
 load_dotenv()
 
+# Initialize FastAPI app
 app = FastAPI(title="Smart File Organizer System")
 
-# CORS for React frontend
+# ✅ CORS configuration (must be before routers)
 origins = [
-    "https://smart-file-organizer-orhn.onrender.com",
+    "https://smart-file-organizer-hiyizpw9g-thulasiram018s-projects.vercel.app",  # Vercel frontend
+    "http://localhost:5173",  # Local dev frontend
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,        # or ["*"] for testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
+# ✅ Include routers after middleware
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(file_router, prefix="", tags=["File Operations"])
 
+# ✅ Startup event: start watchdog monitoring
 @app.on_event("startup")
 async def startup_event():
     """Start watchdog monitoring if a folder is configured."""
@@ -36,12 +40,14 @@ async def startup_event():
         start_monitoring(watch_folder)
         print(f"Started monitoring {watch_folder}")
 
+# ✅ Shutdown event: stop watchdog monitoring
 @app.on_event("shutdown")
 async def shutdown_event():
     """Stop all watchdog observers."""
     stop_monitoring()
     print("Stopped all monitors")
 
+# ✅ Root endpoint
 @app.get("/")
 def root():
     return {"message": "Smart File Organizer System API"}
