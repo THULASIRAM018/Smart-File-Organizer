@@ -12,9 +12,13 @@ load_dotenv()
 app = FastAPI(title="Smart File Organizer System")
 
 # CORS for React frontend
+origins = [
+    "https://smart-file-organizer-orhn.onrender.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict to your frontend domain
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
