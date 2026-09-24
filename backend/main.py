@@ -31,7 +31,7 @@ print("EMAIL_PASSWORD SET:", bool(os.getenv("EMAIL_PASSWORD")))
 app = FastAPI(
     title="Smart File Organizer System",
     description="Smart File Organizer backend API",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 
@@ -39,23 +39,39 @@ app = FastAPI(
 # CORS CONFIGURATION
 # ============================================================
 
-# Add every frontend origin that is allowed to access
-# this FastAPI backend.
+# IMPORTANT:
+# Add the EXACT frontend origin that is shown in the browser.
+#
+# Current Vercel deployment:
+# https://smart-file-organizer-a9zkpcsro-thulasiram018s-projects.vercel.app
+#
+# Previous deployments are also included so they continue to work.
 
 origins = [
-    # Current Vercel frontend
+    # --------------------------------------------------------
+    # CURRENT VERCEL FRONTEND
+    # --------------------------------------------------------
+    "https://smart-file-organizer-a9zkpcsro-thulasiram018s-projects.vercel.app",
+
+    # --------------------------------------------------------
+    # PREVIOUS VERCEL FRONTEND
+    # --------------------------------------------------------
     "https://smart-file-organizer-dbltamn4y-thulasiram018s-projects.vercel.app",
 
-    # Current/previous Vercel deployment
+    # --------------------------------------------------------
+    # OTHER VERCEL DEPLOYMENT
+    # --------------------------------------------------------
     "https://smart-file-organizer-flax.vercel.app",
 
-    # Older Vercel deployment
+    # --------------------------------------------------------
+    # OLDER VERCEL DEPLOYMENT
+    # --------------------------------------------------------
     "https://smart-file-organizer-hiyizpw9g-thulasiram018s-projects.vercel.app",
 
-    # Local Vite development
+    # --------------------------------------------------------
+    # LOCAL DEVELOPMENT
+    # --------------------------------------------------------
     "http://localhost:5173",
-
-    # Local Vite development using 127.0.0.1
     "http://127.0.0.1:5173",
 ]
 
@@ -63,16 +79,16 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
 
-    # Allowed frontend URLs
+    # Allowed frontend origins
     allow_origins=origins,
 
-    # Allow cookies/authentication credentials
+    # Allow cookies / authentication credentials
     allow_credentials=True,
 
-    # Allow GET, POST, PUT, DELETE, OPTIONS, etc.
+    # Allow all HTTP methods including OPTIONS
     allow_methods=["*"],
 
-    # Allow Content-Type, Authorization, etc.
+    # Allow all request headers
     allow_headers=["*"],
 )
 
@@ -81,17 +97,23 @@ app.add_middleware(
 # AUTHENTICATION ROUTES
 # ============================================================
 
-# Final endpoints:
+# Because prefix="/auth" is used here:
 #
-# POST /auth/send-otp
-# POST /auth/verify-otp
-# POST /auth/login
-# etc.
+# auth_routes.py:
+#     @router.post("/send-otp")
+#
+# becomes:
+#
+#     POST /auth/send-otp
+#
+# Similarly:
+#
+#     POST /auth/verify-otp
 
 app.include_router(
     auth_router,
     prefix="/auth",
-    tags=["Authentication"]
+    tags=["Authentication"],
 )
 
 
@@ -104,7 +126,7 @@ app.include_router(
 app.include_router(
     file_router,
     prefix="",
-    tags=["File Operations"]
+    tags=["File Operations"],
 )
 
 
@@ -121,20 +143,25 @@ async def startup_event():
 
     watch_folder = os.getenv("WATCH_FOLDER")
 
-    if watch_folder:
-        if os.path.isdir(watch_folder):
-            try:
-                start_monitoring(watch_folder)
-                print(f"Started monitoring: {watch_folder}")
-            except Exception as e:
-                print(f"Failed to start monitoring: {e}")
-        else:
-            print(
-                f"WATCH_FOLDER does not exist or is invalid: "
-                f"{watch_folder}"
-            )
-    else:
+    if not watch_folder:
         print("WATCH_FOLDER not configured. Monitoring disabled.")
+        return
+
+    if not os.path.isdir(watch_folder):
+        print(
+            f"WATCH_FOLDER does not exist or is invalid: "
+            f"{watch_folder}"
+        )
+        return
+
+    try:
+        start_monitoring(watch_folder)
+        print(f"Started monitoring: {watch_folder}")
+
+    except Exception as error:
+        print(
+            f"Failed to start watchdog monitoring: {error}"
+        )
 
 
 # ============================================================
@@ -150,8 +177,11 @@ async def shutdown_event():
     try:
         stop_monitoring()
         print("Stopped all monitors")
-    except Exception as e:
-        print(f"Error while stopping monitors: {e}")
+
+    except Exception as error:
+        print(
+            f"Error while stopping monitors: {error}"
+        )
 
 
 # ============================================================
@@ -160,9 +190,13 @@ async def shutdown_event():
 
 @app.get("/")
 def root():
+    """
+    Basic API status endpoint.
+    """
+
     return {
         "message": "Smart File Organizer System API",
-        "status": "running"
+        "status": "running",
     }
 
 
@@ -172,7 +206,11 @@ def root():
 
 @app.get("/health")
 def health_check():
+    """
+    Health check endpoint for Render or other monitoring services.
+    """
+
     return {
         "status": "healthy",
-        "service": "Smart File Organizer API"
+        "service": "Smart File Organizer API",
     }
