@@ -3,13 +3,12 @@ import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
-from fastapi import BackgroundTasks
 from database import get_db_connection
 from utils import generate_otp, generate_session_token
 
-def send_otp_email(background_tasks: BackgroundTasks, email: str, otp: str):
-    """Queue email sending as a background task."""
-    background_tasks.add_task(_send_email, email, otp)
+def send_otp_email(email: str, otp: str):
+    """Send the OTP and let the API report delivery failures to the caller."""
+    _send_email(email, otp)
 
 def _send_email(to_email: str, otp: str):
     """Actual SMTP send function (runs in background)."""
@@ -18,6 +17,9 @@ def _send_email(to_email: str, otp: str):
     smtp_user = os.getenv("EMAIL_USER")                     # your email address
     smtp_pass = os.getenv("EMAIL_PASSWORD")                 # app password
     from_email = os.getenv("EMAIL_FROM", smtp_user)
+
+    if not smtp_user or not smtp_pass:
+        raise RuntimeError("EMAIL_USER and EMAIL_PASSWORD must be configured")
 
     subject = "Your OTP for Smart File Organizer"
     body = f"Your OTP is: {otp}\nIt is valid for 10 minutes."
@@ -29,13 +31,14 @@ def _send_email(to_email: str, otp: str):
     msg.attach(MIMEText(body, "plain"))
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
             server.starttls()
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
         print(f"✅ OTP email sent to {to_email}")
     except Exception as e:
         print(f"❌ Failed to send email: {e}")
+        raise RuntimeError("Unable to send OTP email") from e
 
 def store_otp(email: str, otp: str):
     """Store OTP and expiry in the database (10 minutes validity)."""

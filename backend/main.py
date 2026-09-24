@@ -49,6 +49,11 @@ app = FastAPI(
 
 origins = [
     # --------------------------------------------------------
+    # CURRENT VERCEL DEPLOYMENT
+    # --------------------------------------------------------
+    "https://smart-file-organizer-4zjg27iem-thulasiram018s-projects.vercel.app",
+
+    # --------------------------------------------------------
     # CURRENT VERCEL FRONTEND
     # --------------------------------------------------------
     "https://smart-file-organizer-a9zkpcsro-thulasiram018s-projects.vercel.app",

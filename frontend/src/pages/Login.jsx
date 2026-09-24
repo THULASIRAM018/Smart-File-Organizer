@@ -24,7 +24,10 @@ const Login = () => {
     } catch (error) {
       setAlert({
         type: 'error',
-        message: error.response?.data?.message || 'Failed to send OTP. Please try again.',
+        message:
+          error.response?.data?.detail ||
+          error.response?.data?.message ||
+          'Failed to send OTP. Please try again.',
       });
     } finally {
       setLoading(false);
